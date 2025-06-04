@@ -5,19 +5,20 @@ services:
     environment:
       MYSQL_DATABASE: ${DB_NAME}
       MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
-      MYSQL_USER: ${DB_USER}               # Uncomment to create dedicated user
-      MYSQL_PASSWORD: ${DB_PASSWORD}       # Uncomment to create dedicated user
+      MYSQL_USER: ${DB_USER}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
       MYSQL_ROOT_HOST: '%'
     ports:
       - "3308:3306"
     volumes:
       - mysql_data:/var/lib/mysql
+    command: --default-authentication-plugin=mysql_native_password
     healthcheck:
-      test: ["CMD-SHELL", "mysqladmin ping -h localhost -u root -p0000 --silent"]
-      interval: 30s
-      timeout: 10s
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${DB_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
       retries: 5
-      start_period: 40s
+      start_period: 30s
 
   backend:
     build: 
@@ -25,7 +26,7 @@ services:
       dockerfile: Dockerfile
     restart: unless-stopped
     volumes:
-      - .:/app 
+      - .:/app
       - static_volume:/app/staticfiles
       - media_volume:/app/media
     ports:
@@ -41,16 +42,25 @@ services:
       - DB_PORT=${DB_PORT}
       - DEBUG=${DEBUG}
       - SECRET_KEY=${SECRET_KEY}
-      - OIUYT=${OIUYT}
-      - F=${F}
     depends_on:
       db:
         condition: service_healthy
     command: >
       sh -c "
         echo 'Waiting for database...' &&
-        python manage.py migrate &&
+        sleep 20 &&
+        echo 'Running migrations...' &&
+        python manage.py makemigrations &&
+        python manage.py migrate auth &&
+        python manage.py migrate contenttypes &&
+        python manage.py migrate admin &&
+        python manage.py migrate sessions &&
+        python manage.py migrate sites &&
+        python manage.py migrate account &&
+        python manage.py migrate socialaccount &&
+        python manage.py migrate authtoken &&
         echo 'Collecting static files...' &&
+        mkdir -p /app/static &&
         python manage.py collectstatic --noinput &&
         echo 'Starting development server...' &&
         python manage.py runserver 0.0.0.0:8000
