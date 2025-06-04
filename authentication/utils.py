@@ -5,6 +5,7 @@ from django.utils.translation import gettext
 from rest_framework_simplejwt.tokens import RefreshToken
 from .exceptions import UserDeactivatedException
 
+# Generate JWT tokens for a user
 def get_token_for_user(user):
     """Generate JWT tokens for a user"""
     refresh = RefreshToken.for_user(user)
