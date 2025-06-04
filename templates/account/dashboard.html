@@ -1,0 +1,332 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load static %}
+
+{% load socialaccount %}
+
+{% block head_title %}{% trans "Dashboard" %}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <!-- Sidebar Navigation -->
+    <nav class="dashboard-sidebar">
+        <div class="sidebar-header">
+            <img src="{% static 'images/logo.jpeg' %}" alt="Logo" class="logo">
+            <h2>{% trans "Dashboard" %}</h2>
+        </div>
+        <ul class="sidebar-menu">
+            <li class="active">
+                <a href="#profile" data-section="profile">
+                    <i class="fas fa-user"></i>
+                    <span>{% trans "Profile" %}</span>
+                </a>
+            </li>
+            <li>
+                <a href="#social-accounts" data-section="social-accounts">
+                    <i class="fas fa-share-alt"></i>
+                    <span>{% trans "Social Accounts" %}</span>
+                </a>
+            </li>
+            <li>
+                <a href="#security" data-section="security">
+                    <i class="fas fa-shield-alt"></i>
+                    <span>{% trans "Security" %}</span>
+                </a>
+            </li>
+            <li>
+                <a href="#notifications" data-section="notifications">
+                    <i class="fas fa-bell"></i>
+                    <span>{% trans "Notifications" %}</span>
+                </a>
+            </li>
+            <li>
+                <a href="{% url 'authentication:logout' %}" class="logout-link">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>{% trans "Logout" %}</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+
+    <!-- Main Content Area -->
+    <main class="dashboard-main">
+        <!-- Profile Section -->
+        <section id="profile" class="dashboard-section active">
+            <div class="section-header">
+                <h1>{% trans "Profile Information" %}</h1>
+                <button class="edit-button" onclick="toggleEditMode('profile')">
+                    <i class="fas fa-edit"></i> {% trans "Edit" %}
+                </button>
+            </div>
+
+          
+        </section>
+
+        <!-- Social Accounts Section -->
+        <section id="social-accounts" class="dashboard-section">
+            <div class="section-header">
+                <h1>{% trans "Connected Accounts" %}</h1>
+            </div>
+
+            <div class="social-accounts-grid">
+                {% get_social_accounts user as accounts %}
+                
+                <!-- Google -->
+                <div class="social-account-card {% if 'google' in accounts %}connected{% endif %}">
+                    <img src="{% static 'images/google.svg' %}" alt="Google">
+                    <h3>Google</h3>
+                    {% if 'google' in accounts %}
+                        <button class="disconnect-button" data-provider="google">{% trans "Disconnect" %}</button>
+                    {% else %}
+                        <a href="{% provider_login_url 'google' process='connect' %}" class="connect-button">{% trans "Connect" %}</a>
+                    {% endif %}
+                </div>
+
+                <!-- GitHub -->
+                <div class="social-account-card {% if 'github' in accounts %}connected{% endif %}">
+                    <img src="{% static 'images/github.svg' %}" alt="GitHub">
+                    <h3>GitHub</h3>
+                    {% if 'github' in accounts %}
+                        <button class="disconnect-button" data-provider="github">{% trans "Disconnect" %}</button>
+                    {% else %}
+                        <a href="{% provider_login_url 'github' process='connect' %}" class="connect-button">{% trans "Connect" %}</a>
+                    {% endif %}
+                </div>
+
+                {% provider_login_url 'github' process='connect' %}      
+                {% provider_login_url 'google' process='connect' %}
+                {% provider_login_url 'facebook' process='connect' %}
+                {% provider_login_url 'twitter' process='connect' %}
+                {% provider_login_url 'microsoft' process='connect' %}
+                {% provider_login_url 'apple' process='connect' %}
+
+                <!-- Add more social providers as needed -->
+            </div>
+        </section>
+
+        <!-- Security Section -->
+        <section id="security" class="dashboard-section">
+            <div class="section-header">
+                <h1>{% trans "Security Settings" %}</h1>
+            </div>
+
+            <div class="security-settings">
+                <div class="security-card">
+                    <div class="security-info">
+                        <h3>{% trans "Change Password" %}</h3>
+                        <p>{% trans "Update your password to keep your account secure" %}</p>
+                    </div>
+                    <button class="change-password-button" onclick="showPasswordModal()">
+                        {% trans "Change Password" %}
+                    </button>
+                </div>
+
+                <div class="security-card">
+                    <div class="security-info">
+                        <h3>{% trans "Two-Factor Authentication" %}</h3>
+                        <p>{% trans "Add an extra layer of security to your account" %}</p>
+                    </div>
+                    <button class="enable-2fa-button" onclick="setup2FA()">
+                        {% trans "Enable 2FA" %}
+                    </button>
+                </div>
+
+                <div class="security-card">
+                    <div class="security-info">
+                        <h3>{% trans "Login History" %}</h3>
+                        <p>{% trans "View your recent login activity" %}</p>
+                    </div>
+                    <button class="view-history-button" onclick="showLoginHistory()">
+                        {% trans "View History" %}
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Notifications Section -->
+        <section id="notifications" class="dashboard-section">
+            <div class="section-header">
+                <h1>{% trans "Notification Preferences" %}</h1>
+            </div>
+
+            <form id="notifications-form" class="notifications-form">
+                {% csrf_token %}
+                <div class="notification-settings">
+                    <div class="notification-card">
+                        <div class="notification-info">
+                            <h3>{% trans "Email Notifications" %}</h3>
+                            <p>{% trans "Receive updates and important information via email" %}</p>
+                        </div>
+                        <label class="switch">
+                            <input type="checkbox" name="email_notifications" {% if user.email_enabled %}checked{% endif %}>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+
+                    <div class="notification-card">
+                        <div class="notification-info">
+                            <h3>{% trans "Security Alerts" %}</h3>
+                            <p>{% trans "Get notified about security-related activities" %}</p>
+                        </div>
+                        <label class="switch">
+                            <input type="checkbox" name="security_alerts" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+
+                    <div class="notification-card">
+                        <div class="notification-info">
+                            <h3>{% trans "Marketing Emails" %}</h3>
+                            <p>{% trans "Receive updates about new features and promotions" %}</p>
+                        </div>
+                        <label class="switch">
+                            <input type="checkbox" name="marketing_emails">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="save-button">{% trans "Save Preferences" %}</button>
+                </div>
+            </form>
+        </section>
+    </main>
+</div>
+
+<!-- Password Change Modal -->
+<div id="password-modal" class="modal">
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <h2>{% trans "Change Password" %}</h2>
+        <form id="password-form" method="POST" action="{% url 'account_change_password' %}">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="old_password">{% trans "Current Password" %}</label>
+                <input type="password" id="old_password" name="old_password" required>
+            </div>
+            <div class="form-group">
+                <label for="new_password1">{% trans "New Password" %}</label>
+                <input type="password" id="new_password1" name="new_password1" required>
+            </div>
+            <div class="form-group">
+                <label for="new_password2">{% trans "Confirm New Password" %}</label>
+                <input type="password" id="new_password2" name="new_password2" required>
+            </div>
+            <div class="form-actions">
+                <button type="submit" class="save-button">{% trans "Update Password" %}</button>
+                <button type="button" class="cancel-button" onclick="closePasswordModal()">{% trans "Cancel" %}</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+
+<script>
+    // Navigation
+    document.querySelectorAll('.sidebar-menu a[data-section]').forEach(link => {
+        link.addEventListener('click', (e) => {
+            e.preventDefault();
+            const section = link.getAttribute('data-section');
+            
+            // Update active states
+            document.querySelectorAll('.sidebar-menu li').forEach(li => li.classList.remove('active'));
+            link.parentElement.classList.add('active');
+            
+            // Show selected section
+            document.querySelectorAll('.dashboard-section').forEach(section => {
+                section.classList.remove('active');
+            });
+            document.getElementById(section).classList.add('active');
+        });
+    });
+
+    // Profile Edit Mode
+    function toggleEditMode(section) {
+        const form = document.getElementById(`${section}-form`);
+        const inputs = form.querySelectorAll('input:not([readonly])');
+        const editButton = document.querySelector('.edit-button');
+        const saveButton = form.querySelector('.save-button');
+        const cancelButton = form.querySelector('.cancel-button');
+
+        inputs.forEach(input => {
+            input.disabled = !input.disabled;
+        });
+
+        editButton.style.display = 'none';
+        saveButton.disabled = false;
+        cancelButton.disabled = false;
+    }
+
+    function cancelEdit(section) {
+        const form = document.getElementById(`${section}-form`);
+        const inputs = form.querySelectorAll('input:not([readonly])');
+        const editButton = document.querySelector('.edit-button');
+        const saveButton = form.querySelector('.save-button');
+        const cancelButton = form.querySelector('.cancel-button');
+
+        inputs.forEach(input => {
+            input.disabled = true;
+            input.value = input.defaultValue;
+        });
+
+        editButton.style.display = 'block';
+        saveButton.disabled = true;
+        cancelButton.disabled = true;
+    }
+
+    // Password Modal
+    function showPasswordModal() {
+        document.getElementById('password-modal').style.display = 'block';
+    }
+
+    function closePasswordModal() {
+        document.getElementById('password-modal').style.display = 'none';
+    }
+
+    // Close modal when clicking outside
+    window.onclick = function(event) {
+        const modal = document.getElementById('password-modal');
+        if (event.target == modal) {
+            modal.style.display = 'none';
+        }
+    }
+
+    // Profile Picture Upload
+    document.getElementById('avatar-input').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('profile-picture').src = e.target.result;
+            }
+            reader.readAsDataURL(file);
+        }
+    });
+
+    // Form Submissions
+    document.getElementById('profile-form').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        // Add your profile update logic here
+    });
+
+    document.getElementById('notifications-form').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        // Add your notification preferences update logic here
+    });
+
+    // Social Account Disconnection
+    document.querySelectorAll('.disconnect-button').forEach(button => {
+        button.addEventListener('click', async function() {
+            const provider = this.getAttribute('data-provider');
+            if (confirm(`Are you sure you want to disconnect your ${provider} account?`)) {
+                // Add your disconnection logic here
+            }
+        });
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,263 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load static %}
+{% load socialaccount %}
+
+{% block head_title %}{% trans "Sign Up" %}{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <div class="auth-card">
+        <div class="auth-header">
+            <img src="{% static 'images/logo.jpeg' %}" alt="Logo" class="auth-logo">
+            <h1>{% trans "Create Account" %}</h1>
+            <p>{% trans "Join us today" %}</p>
+        </div>
+
+
+        <!-- Social Signup Buttons -->
+        <div class="social-login">
+            <div class="social-buttons">
+                <a href="{% provider_login_url 'google' %}" class="social-button google">
+                    <img src="{% static 'images/google.svg' %}" alt="Google">
+                    <span>{% trans "Sign up with Google" %}</span>
+                </a>
+                <a href="{% provider_login_url 'github' %}" class="social-button github">
+                    <img src="{% static 'images/github.svg' %}" alt="GitHub">
+                    <span>{% trans "Sign up with GitHub" %}</span>
+                </a>
+                <a href="{% provider_login_url 'facebook' %}" class="social-button facebook">
+                    <img src="{% static 'images/facebook.svg' %}" alt="Facebook">
+                    <span>{% trans "Sign up with Facebook" %}</span>
+                </a>
+                <a href="{% provider_login_url 'twitter' %}" class="social-button twitter">
+                    <img src="{% static 'images/twitter.svg' %}" alt="Twitter">
+                    <span>{% trans "Sign up with Twitter" %}</span>
+                </a>
+                <a href="{% provider_login_url 'microsoft' %}" class="social-button microsoft">
+                    <img src="{% static 'images/microsoft.svg' %}" alt="Microsoft">
+                    <span>{% trans "Sign up with Microsoft" %}</span>
+                </a>
+                <a href="{% provider_login_url 'apple' %}" class="social-button apple">
+                    <img src="{% static 'images/apple.svg' %}" alt="Apple">
+                    <span>{% trans "Sign up with Apple" %}</span>
+                </a>
+            </div>
+
+            <div class="divider">
+                <span>{% trans "or" %}</span>
+            </div>
+        </div>
+
+        <!-- Registration Form -->
+        <form class="signup-form" method="POST" action="{% url 'account_signup' %}">
+            {% csrf_token %}
+            {% if redirect_field_value %}
+            <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}" />
+            {% endif %}
+
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="id_email">{% trans "Email" %}</label>
+                    <div class="input-group">
+                        <i class="fas fa-envelope"></i>
+                        <input type="email" name="email" id="id_email" placeholder="{% trans 'Enter your email' %}" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="id_username">{% trans "Username" %}</label>
+                    <div class="input-group">
+                        <i class="fas fa-user"></i>
+                        <input type="text" name="username" id="id_username" placeholder="{% trans 'Choose a username' %}" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="id_first_name">{% trans "First Name" %}</label>
+                    <div class="input-group">
+                        <i class="fas fa-user"></i>
+                        <input type="text" name="first_name" id="id_first_name" placeholder="{% trans 'Enter your first name' %}" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="id_last_name">{% trans "Last Name" %}</label>
+                    <div class="input-group">
+                        <i class="fas fa-user"></i>
+                        <input type="text" name="last_name" id="id_last_name" placeholder="{% trans 'Enter your last name' %}" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="id_password1">{% trans "Password" %}</label>
+                    <div class="input-group">
+                        <i class="fas fa-lock"></i>
+                        <input type="password" name="password1" id="id_password1" placeholder="{% trans 'Create a password' %}" required>
+                        <button type="button" class="toggle-password" onclick="togglePassword('id_password1')">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                    <div class="password-requirements">
+                        <p class="requirement" data-requirement="length">{% trans "At least 8 characters" %}</p>
+                        <p class="requirement" data-requirement="uppercase">{% trans "One uppercase letter" %}</p>
+                        <p class="requirement" data-requirement="lowercase">{% trans "One lowercase letter" %}</p>
+                        <p class="requirement" data-requirement="number">{% trans "One number" %}</p>
+                        <p class="requirement" data-requirement="special">{% trans "One special character" %}</p>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="id_password2">{% trans "Confirm Password" %}</label>
+                    <div class="input-group">
+                        <i class="fas fa-lock"></i>
+                        <input type="password" name="password2" id="id_password2" placeholder="{% trans 'Confirm your password' %}" required>
+                        <button type="button" class="toggle-password" onclick="togglePassword('id_password2')">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="form-group terms-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="is_terms_accepted" id="id_is_terms_accepted" required>
+                        <span>Accept Terms and Conditions</span>
+                    </label>
+                </div>
+            </div>
+
+            {% if form.errors %}
+            <div class="form-errors">
+                {% for field in form %}
+                {% for error in field.errors %}
+                <div class="error-message">{{ error }}</div>
+                {% endfor %}
+                {% endfor %}
+                {% for error in form.non_field_errors %}
+                <div class="error-message">{{ error }}</div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <button type="submit" class="submit-button">
+                <span>{% trans "Create Account" %}</span>
+                <i class="fas fa-arrow-right"></i>
+            </button>
+        </form>
+
+        <div class="auth-footer">
+            <p>{% trans "Already have an account?" %} <a href="{% url 'account_login' %}">{% trans "Sign in" %}</a></p>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Password validation
+    const passwordInput = document.getElementById('id_password1');
+    const requirements = document.querySelectorAll('.requirement');
+    const confirmPassword = document.getElementById('id_password2');
+
+    const passwordChecks = {
+        length: password => password.length >= 8,
+        uppercase: password => /[A-Z]/.test(password),
+        lowercase: password => /[a-z]/.test(password),
+        number: password => /[0-9]/.test(password),
+        special: password => /[!@#$%^&*(),.?":{}|<>]/.test(password)
+    };
+
+    passwordInput.addEventListener('input', function() {
+        const password = this.value;
+        
+        // Check each requirement
+        Object.keys(passwordChecks).forEach(requirement => {
+            const element = document.querySelector(`[data-requirement="${requirement}"]`);
+            if (passwordChecks[requirement](password)) {
+                element.classList.add('valid');
+            } else {
+                element.classList.remove('valid');
+            }
+        });
+
+        // Check password confirmation
+        if (confirmPassword.value) {
+            validatePasswordConfirmation();
+        }
+    });
+
+    confirmPassword.addEventListener('input', validatePasswordConfirmation);
+
+    function validatePasswordConfirmation() {
+        const password = passwordInput.value;
+        const confirmation = confirmPassword.value;
+        
+        if (confirmation && password !== confirmation) {
+            confirmPassword.setCustomValidity("{% trans 'Passwords do not match' %}");
+        } else {
+            confirmPassword.setCustomValidity('');
+        }
+    }
+
+    // Form validation
+    document.querySelector('.signup-form').addEventListener('submit', function(e) {
+        const email = document.getElementById('id_email').value;
+        const username = document.getElementById('id_username').value;
+        const password = document.getElementById('id_password1').value;
+        const confirmPassword = document.getElementById('id_password2').value;
+        const termsAccepted = document.getElementById('id_is_terms_accepted').checked;
+        let isValid = true;
+        let errorMessage = '';
+
+        if (!email) {
+            errorMessage = '{% trans "Please enter your email" %}';
+            isValid = false;
+        } else if (!isValidEmail(email)) {
+            errorMessage = '{% trans "Please enter a valid email address" %}';
+            isValid = false;
+        } else if (!username) {
+            errorMessage = '{% trans "Please choose a username" %}';
+            isValid = false;
+        } else if (!password) {
+            errorMessage = '{% trans "Please create a password" %}';
+            isValid = false;
+        } else if (!isValidPassword(password)) {
+            errorMessage = '{% trans "Please ensure your password meets all requirements" %}';
+            isValid = false;
+        } else if (password !== confirmPassword) {
+            errorMessage = '{% trans "Passwords do not match" %}';
+            isValid = false;
+        } else if (!termsAccepted) {
+            errorMessage = '{% trans "Please accept the terms and conditions" %}';
+            isValid = false;
+        }
+
+        if (!isValid) {
+            e.preventDefault();
+            showMessage('error', errorMessage);
+        }
+    });
+
+    function isValidEmail(email) {
+        const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return re.test(email);
+    }
+
+    function isValidPassword(password) {
+        return Object.values(passwordChecks).every(check => check(password));
+    }
+
+    function togglePassword(inputId) {
+        const input = document.getElementById(inputId);
+        const icon = input.nextElementSibling.querySelector('i');
+        
+        if (input.type === 'password') {
+            input.type = 'text';
+            icon.classList.remove('fa-eye');
+            icon.classList.add('fa-eye-slash');
+        } else {
+            input.type = 'password';
+            icon.classList.remove('fa-eye-slash');
+            icon.classList.add('fa-eye');
+        }
+    }
+</script>
+{% endblock %} 

@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+
+{% load static %}
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block head_title %}{% endblock %} - Social Authentication</title>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Google Sign-In API -->
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    
+    <!-- Facebook SDK -->
+    <script async defer crossorigin="anonymous" src="https://connect.facebook.net/en_US/sdk.js"></script>
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{% static 'css/base.css' %}">
+    
+    {% block extra_css %}
+    
+    {% endblock %}
+
+    <!-- Client IDs -->
+    <script>
+        const GOOGLE_CLIENT_ID = '{{ GOOGLE_CLIENT_ID }}';
+        const GITHUB_CLIENT_ID = '{{ GITHUB_CLIENT_ID }}';
+        const FACEBOOK_CLIENT_ID = '{{ FACEBOOK_CLIENT_ID }}';
+        const TWITTER_CLIENT_ID = '{{ TWITTER_CLIENT_ID }}';
+        const MICROSOFT_CLIENT_ID = '{{ MICROSOFT_CLIENT_ID }}';
+        const APPLE_CLIENT_ID = '{{ APPLE_CLIENT_ID }}';
+
+        // Initialize Facebook SDK
+        window.fbAsyncInit = function() {
+            FB.init({
+                appId: FACEBOOK_CLIENT_ID,
+                cookie: true,
+                xfbml: true,
+                version: 'v18.0'
+            });
+        };
+    </script>
+
+    <!-- Custom JavaScript -->
+    <script src="{% static 'js/auth.js' %}"></script>
+    
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+    <!-- Flash Messages -->
+    {% if messages %}
+    <div class="messages">
+        {% for message in messages %}
+        <div class="message {{ message.tags }}">
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Loading Spinner -->
+    <div class="loading-spinner">
+        <div class="spinner"></div>
+    </div>
+
+    <!-- Main Content -->
+    {% block content %}{% endblock %}
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+          var messages = document.getElementsByClassName('message');
+          if (messages.length > 0) {
+            setTimeout(function() {
+              for (var i = 0; i < messages.length; i++) {
+                messages[i].style.display = 'none';
+              }
+            }, 3000); // 3 seconds
+          }
+        });
+      </script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html> 
