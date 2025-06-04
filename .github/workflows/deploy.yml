@@ -3,6 +3,7 @@ name: Deploy to PythonAnywhere
 on:
   push:
     branches: [ main ]
+  workflow_dispatch:
 
 jobs:
   deploy:
@@ -12,23 +13,31 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-      
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    
+    - name: Install PythonAnywhere CLI
+      run: |
+        pip install requests
+    
     - name: Deploy to PythonAnywhere
       env:
         PA_API_TOKEN: ${{ secrets.PYTHONANYWHERE_API_TOKEN }}
         PA_USERNAME: ${{ secrets.PYTHONANYWHERE_USERNAME }}
         PA_DOMAIN: ${{ secrets.PYTHONANYWHERE_DOMAIN }}
       run: |
-        # Install PA CLI
-        pip install pythonanywhere
+        # Create deployment script
+        cat > deploy.py << 'EOF'
+        import requests
+        import os
+        import time
+        import json
         
-        # Update source code
-        curl -X POST \
-          -H "Authorization: Token $PA_API_TOKEN" \
-          -d "command=cd /home/$PA_USERNAME/mysite && git pull" \
-          https://www.pythonanywhere.com/api/v0/user/$PA_USERNAME/consoles/
+        API_TOKEN = os.environ['PA_API_TOKEN']
+        USERNAME = os.environ['PA_USERNAME']
+        DOMAIN = os.environ['PA_DOMAIN']
         
-        # Restart web app
-        curl -X POST \
-          -H "Authorization: Token $PA_API_TOKEN" \
-          https://www.pythonanywhere.com/api/v0/user/$PA_USERNAME/webapps/$PA_DOMAIN/reload/
+        BASE_URL = 'https://www.pythonanywhere.com/api/v0/user
