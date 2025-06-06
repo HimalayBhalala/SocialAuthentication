@@ -47,6 +47,9 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework.authtoken',  # Required for token authentication
     'rest_framework_simplejwt',  # Required for JWT authentication
+    
+    'authentication',
+    
     'dj_rest_auth',
     'dj_rest_auth.registration',
     'allauth',
@@ -63,7 +66,6 @@ INSTALLED_APPS = [
     'corsheaders',
     
     # Local apps
-    'authentication',
 ]
 
 MIDDLEWARE = [
