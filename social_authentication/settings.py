@@ -106,28 +106,37 @@ WSGI_APPLICATION = 'social_authentication.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
+# Check if we're running locally and MySQL is not available
+USE_SQLITE_FALLBACK = os.environ.get('USE_SQLITE_FALLBACK', 'false').lower() == 'true'
 
-DATABASES = {
-    'default': {
-        'ENGINE': os.environ.get('DB_ENGINE', 'django.db.backends.mysql'),
-        'NAME': os.environ.get('DB_NAME') or os.environ.get('MYSQL_DATABASE', 'social_auth_db'),
-        'USER': os.environ.get('DB_USER') or os.environ.get('MYSQL_USER', 'django_user'),
-        'PASSWORD': os.environ.get('DB_PASSWORD') or os.environ.get('MYSQL_PASSWORD', 'secure_password_123'),
-        'HOST': os.environ.get('DB_HOST') or os.environ.get('MYSQL_HOST', 'localhost'),
-        'PORT': os.environ.get('DB_PORT') or os.environ.get('MYSQL_PORT', '3306'),
-        'OPTIONS': {
-            'charset': 'utf8mb4',
-            'sql_mode': 'TRADITIONAL',
-            'init_command': "SET foreign_key_checks = 0;",
-        },
-        'TEST': {
-            'NAME': 'test_' + (os.environ.get('DB_NAME') or os.environ.get('MYSQL_DATABASE', 'social_auth_db')),
-            'CHARSET': 'utf8mb4',
-            'COLLATION': 'utf8mb4_unicode_ci',
+if USE_SQLITE_FALLBACK:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
         }
     }
-}
-
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': os.environ.get('DB_ENGINE', 'django.db.backends.mysql'),
+            'NAME': os.environ.get('DB_NAME') or os.environ.get('MYSQL_DATABASE', 'social_auth_db'),
+            'USER': os.environ.get('DB_USER') or os.environ.get('MYSQL_USER', 'django_user'),
+            'PASSWORD': os.environ.get('DB_PASSWORD') or os.environ.get('MYSQL_PASSWORD', 'secure_password_123'),
+            'HOST': os.environ.get('DB_HOST') or os.environ.get('MYSQL_HOST', 'localhost'),
+            'PORT': os.environ.get('DB_PORT') or os.environ.get('MYSQL_PORT', '3306'),
+            'OPTIONS': {
+                'charset': 'utf8mb4',
+                'sql_mode': 'TRADITIONAL',
+                'init_command': "SET foreign_key_checks = 0;",
+            },
+            'TEST': {
+                'NAME': 'test_' + (os.environ.get('DB_NAME') or os.environ.get('MYSQL_DATABASE', 'social_auth_db')),
+                'CHARSET': 'utf8mb4',
+                'COLLATION': 'utf8mb4_unicode_ci',
+            }
+        }
+    }
 
 
 # Password validation
@@ -330,9 +339,9 @@ AUTH_USER_MODEL = 'authentication.User'
 # Static files (CSS, JavaScript, Images)
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, 'static'),
+    BASE_DIR / 'static',
 ]
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 
 # Default primary key field type
@@ -371,35 +380,36 @@ CSRF_TRUSTED_ORIGINS = [
 
 
 # Ensure all database settings are strings, not None
-for key in ['NAME', 'USER', 'PASSWORD', 'HOST', 'PORT']:
-    if DATABASES['default'][key] is None:
-        if key == 'HOST':
-            DATABASES['default'][key] = 'localhost'
-        elif key == 'PORT':
-            DATABASES['default'][key] = '3306'
-        else:
-            raise ValueError(f"Database {key} cannot be None. Please set DB_{key} or MYSQL_{key} environment variable.")
+if not USE_SQLITE_FALLBACK:
+    for key in ['NAME', 'USER', 'PASSWORD', 'HOST', 'PORT']:
+        if DATABASES['default'][key] is None:
+            if key == 'HOST':
+                DATABASES['default'][key] = 'localhost'
+            elif key == 'PORT':
+                DATABASES['default'][key] = '3306'
+            else:
+                raise ValueError(f"Database {key} cannot be None. Please set DB_{key} or MYSQL_{key} environment variable.")
 
-# Convert PORT to string if it's an integer
-DATABASES['default']['PORT'] = str(DATABASES['default']['PORT'])
+    # Convert PORT to string if it's an integer
+    DATABASES['default']['PORT'] = str(DATABASES['default']['PORT'])
 
-# Alternative configuration for different environments
-if os.environ.get('DJANGO_ENV') == 'testing':
-    DATABASES['default'].update({
-        'HOST': '127.0.0.1',
-        'PORT': '3306',
-        'OPTIONS': {
-            'charset': 'utf8mb4',
-            'init_command': "SET foreign_key_checks = 0;",
-        }
-    })
+    # Alternative configuration for different environments
+    if os.environ.get('DJANGO_ENV') == 'testing':
+        DATABASES['default'].update({
+            'HOST': '127.0.0.1',
+            'PORT': '3306',
+            'OPTIONS': {
+                'charset': 'utf8mb4',
+                'init_command': "SET foreign_key_checks = 0;",
+            }
+        })
 
-# For CI/CD environments, ensure we have proper test database settings
-if os.environ.get('CI') or os.environ.get('GITHUB_ACTIONS'):
-    DATABASES['default'].update({
-        'HOST': '127.0.0.1',
-        'PORT': '3306',
-        'NAME': 'test_db',
-        'USER': 'test_user',
-        'PASSWORD': 'test_password',
-    })
+    # For CI/CD environments, ensure we have proper test database settings
+    if os.environ.get('CI') or os.environ.get('GITHUB_ACTIONS'):
+        DATABASES['default'].update({
+            'HOST': '127.0.0.1',
+            'PORT': '3306',
+            'NAME': 'test_db',
+            'USER': 'test_user',
+            'PASSWORD': 'test_password',
+        })
