@@ -80,7 +80,7 @@ jobs:
         # Django settings
         SECRET_KEY: test-secret-key-for-ci-that-is-long-enough-for-security
         DEBUG: True
-        DJANGO_SETTINGS_MODULE: your_project.settings
+        DJANGO_SETTINGS_MODULE: social_authentication.settings
       run: |
         python manage.py migrate
         python manage.py test
