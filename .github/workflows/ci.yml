@@ -17,10 +17,9 @@ jobs:
       mysql:
         image: mysql:8.0
         env:
-          MYSQL_ROOT_PASSWORD: test_password
-          MYSQL_DATABASE: test_db
-          MYSQL_USER: test_user
-          MYSQL_PASSWORD: test_password
+          DB_PASSWORD: test_password
+          DB_NAME: test_db
+          DB_USER: test_user
         ports:
           - 3306:3306
         options: >-
@@ -54,7 +53,7 @@ jobs:
         DB_NAME: test_db
         DB_USER: test_user
         DB_PASSWORD: test_password
-        DB_HOST: 127.0.0.1
+        DB_HOST: localhost
         DB_PORT: 3306
         SECRET_KEY: test-secret-key-for-ci
         DEBUG: True

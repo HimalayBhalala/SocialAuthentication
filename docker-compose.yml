@@ -6,11 +6,10 @@ services:
     container_name: social_auth_db
     restart: unless-stopped
     environment:
-      MYSQL_DATABASE: ${DB_NAME:-social_auth_db}
-      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-secure_password_123}
-      MYSQL_USER: ${DB_USER:-django_user}
-      MYSQL_PASSWORD: ${DB_PASSWORD:-secure_password_123}
-      MYSQL_ROOT_HOST: '%'
+      DB_NAME: ${DB_NAME:-social_auth_db}
+      DB_PASSWORD: ${DB_PASSWORD:-secure_password_123}
+      DB_USER: ${DB_USER:-django_user}
+      DB_HOST: '%'
     ports:
       - "3308:3306"
     volumes:
