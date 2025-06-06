@@ -28,7 +28,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.getenv('SECRET_KEY')    
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.getenv('DUBUG')
 
 ALLOWED_HOSTS = ['*']
 
@@ -105,21 +105,27 @@ WSGI_APPLICATION = 'social_authentication.wsgi.application'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
 
-# Add this to your DATABASES configuration
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': os.getenv('DB_NAME'),
-        'USER': os.getenv('DB_USER'),
-        'PASSWORD': os.getenv('DB_PASSWORD'),
-        'HOST': os.getenv('DB_HOST'),
-        'PORT': os.getenv('DB_PORT'),
+        'ENGINE': os.environ.get('DB_ENGINE', 'django.db.backends.mysql'),
+        'NAME': os.environ.get('DB_NAME') or os.environ.get('MYSQL_DATABASE', 'social_auth_db'),
+        'USER': os.environ.get('DB_USER') or os.environ.get('MYSQL_USER', 'django_user'),
+        'PASSWORD': os.environ.get('DB_PASSWORD') or os.environ.get('MYSQL_PASSWORD', 'secure_password_123'),
+        'HOST': os.environ.get('DB_HOST') or os.environ.get('MYSQL_HOST', 'localhost'),
+        'PORT': os.environ.get('DB_PORT') or os.environ.get('MYSQL_PORT', '3306'),
         'OPTIONS': {
-            'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
             'charset': 'utf8mb4',
+            'sql_mode': 'TRADITIONAL',
+            'init_command': "SET foreign_key_checks = 0;",
         },
+        'TEST': {
+            'NAME': 'test_' + (os.environ.get('DB_NAME') or os.environ.get('MYSQL_DATABASE', 'social_auth_db')),
+            'CHARSET': 'utf8mb4',
+            'COLLATION': 'utf8mb4_unicode_ci',
+        }
     }
 }
+
 
 
 # Password validation
@@ -360,3 +366,38 @@ CSRF_TRUSTED_ORIGINS = [
     "http://127.0.0.1",
     "http://0.0.0.0",
 ]
+
+
+# Ensure all database settings are strings, not None
+for key in ['NAME', 'USER', 'PASSWORD', 'HOST', 'PORT']:
+    if DATABASES['default'][key] is None:
+        if key == 'HOST':
+            DATABASES['default'][key] = 'localhost'
+        elif key == 'PORT':
+            DATABASES['default'][key] = '3306'
+        else:
+            raise ValueError(f"Database {key} cannot be None. Please set DB_{key} or MYSQL_{key} environment variable.")
+
+# Convert PORT to string if it's an integer
+DATABASES['default']['PORT'] = str(DATABASES['default']['PORT'])
+
+# Alternative configuration for different environments
+if os.environ.get('DJANGO_ENV') == 'testing':
+    DATABASES['default'].update({
+        'HOST': '127.0.0.1',
+        'PORT': '3306',
+        'OPTIONS': {
+            'charset': 'utf8mb4',
+            'init_command': "SET foreign_key_checks = 0;",
+        }
+    })
+
+# For CI/CD environments, ensure we have proper test database settings
+if os.environ.get('CI') or os.environ.get('GITHUB_ACTIONS'):
+    DATABASES['default'].update({
+        'HOST': '127.0.0.1',
+        'PORT': '3306',
+        'NAME': 'test_db',
+        'USER': 'test_user',
+        'PASSWORD': 'test_password',
+    })

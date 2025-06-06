@@ -47,6 +47,11 @@ services:
     environment:
       - PYTHONPATH=/app
       - DB_HOST=db
+      - DB_PORT=3306
+      - DB_ENGINE=django.db.backends.mysql
+      - DB_NAME=${DB_NAME:-social_auth_db}
+      - DB_USER=${DB_USER:-django_user}
+      - DB_PASSWORD=${DB_PASSWORD:-secure_password_123}
     depends_on:
       db:
         condition: service_healthy
@@ -56,10 +61,12 @@ services:
       sh -c "
         echo 'Waiting for database to be fully ready...' &&
         sleep 30 &&
+        echo 'Database connection test...' &&
+        python -c 'import django; django.setup(); from django.db import connection; connection.ensure_connection(); print(\"Database connected successfully!\")' &&
         echo 'Creating migrations...' &&
         python manage.py makemigrations &&
-        echo 'Running database setup...' &&
-        python manage.py migrate_safely &&
+        echo 'Running database migrations...' &&
+        python manage.py migrate &&
         echo 'Creating superuser if not exists...' &&
         python manage.py shell -c \"
         from django.contrib.auth import get_user_model;
